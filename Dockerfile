@@ -33,7 +33,7 @@ RUN set -eux; \
     URL="https://github.com/codelayers-ai/homebrew-tap/releases/download/${VERSION}/${ARCHIVE}"; \
     echo "Downloading ${URL}"; \
     curl -fsSL "${URL}" -o "/tmp/${ARCHIVE}"; \
-    tar xf "/tmp/${ARCHIVE}" -C /usr/local/bin; \
+    tar xf "/tmp/${ARCHIVE}" --strip-components=1 -C /usr/local/bin; \
     rm "/tmp/${ARCHIVE}"; \
     codelayers --version
 
