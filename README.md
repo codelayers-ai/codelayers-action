@@ -24,6 +24,12 @@ jobs:
           api_key: ${{ secrets.CODELAYERS_API_KEY }}
 ```
 
+## Pricing
+
+Shared visualization links are **free** — anyone with the link can view the 3D graph in their browser.
+
+To generate an API key, you need the [CodeLayers app](https://apps.apple.com/app/codelayers/id6756067177) (subscription required).
+
 ## Setup
 
 1. Install the CLI and create an API key:
@@ -57,7 +63,9 @@ jobs:
 | `share_url` | Full share URL with encryption key |
 | `share_id` | Share ID (UUID) |
 | `node_count` | Number of nodes in the graph |
+| `file_count` | Number of files in the graph |
 | `changed_file_count` | Number of files changed in the PR |
+| `blast_radius_count` | Total files affected by changes (via dependency graph) |
 
 ## How It Works
 
@@ -67,6 +75,13 @@ jobs:
 4. Encrypts with a random key (zero-knowledge — server never sees your code)
 5. Uploads encrypted blob and posts a comment with the share link
 6. The encryption key is in the URL fragment (never sent to the server)
+
+### What reviewers see
+
+- **Blast radius** — changed files highlighted in red, with affected dependencies shown in an orange/yellow gradient by distance
+- **Dependency graph** — click any file to see its imports and dependents
+- **Code metrics** — LOC, complexity, and entry points per file
+- **Language breakdown** — top languages in the codebase at a glance
 
 ## Using Outputs
 
@@ -81,8 +96,15 @@ jobs:
   run: |
     echo "Share URL: ${{ steps.codelayers.outputs.share_url }}"
     echo "Changed files: ${{ steps.codelayers.outputs.changed_file_count }}"
+    echo "Blast radius: ${{ steps.codelayers.outputs.blast_radius_count }}"
 ```
 
 ## Supported Languages
 
 Rust, TypeScript/JavaScript, Python, Java, Go, C++, C#, Ruby, PHP, Swift
+
+## Links
+
+- [Website](https://codelayers.ai/)
+- [App Store](https://apps.apple.com/app/codelayers/id6756067177)
+- [CLI Installation](https://github.com/codelayers-ai/homebrew-tap)
