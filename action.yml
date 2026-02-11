@@ -91,15 +91,16 @@ runs:
           fi
         fi
 
-        echo "Running: codelayers sync /workspace && codelayers $SHARE_ARGS"
+        echo "Running: codelayers $SHARE_ARGS"
 
-        # Single docker run: sync then share (SQLite cache persists between commands)
+        # Share command now parses on-the-fly (no sync needed)
         RESULT=$(docker run --rm \
           -v "${{ github.workspace }}:/workspace" \
           -e CODELAYERS_API_KEY \
           -e CODELAYERS_API_URL \
+          -e HOME=/tmp \
           "${{ inputs.cli_image }}" \
-          sh -c "codelayers sync /workspace && codelayers $SHARE_ARGS")
+          $SHARE_ARGS)
 
         echo "CLI output: $RESULT"
 
