@@ -53,7 +53,6 @@ To generate an API key, you need the [CodeLayers app](https://apps.apple.com/app
 | `max_views` | No | unlimited | Maximum number of views |
 | `comment` | No | `true` | Post/update PR comment |
 | `link_to_pr` | No | `true` | Link share to GitHub repo/PR metadata |
-| `api_url` | No | `https://api.codelayers.ai` | API URL (for self-hosted) |
 | `cli_image` | No | `ghcr.io/codelayers-ai/codelayers-cli:latest` | CLI Docker image |
 
 ## Outputs
