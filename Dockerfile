@@ -37,15 +37,10 @@ RUN set -eux; \
     rm "/tmp/${ARCHIVE}"; \
     codelayers --version
 
-# Create non-root user with writable home for CLI config/cache
-RUN useradd -m -u 1001 -s /bin/sh codelayers
-ENV HOME=/home/codelayers
+# Trust mounted workspaces for git (volume has different owner)
+RUN git config --system --add safe.directory '*'
 
-# Trust /workspace for git (mounted volume has different owner)
-RUN git config --system --add safe.directory /workspace
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-WORKDIR /workspace
-
-USER 1001
-
-ENTRYPOINT ["codelayers"]
+ENTRYPOINT ["/entrypoint.sh"]
