@@ -37,6 +37,10 @@ RUN set -eux; \
     rm "/tmp/${ARCHIVE}"; \
     codelayers --version
 
+# Create non-root user with writable home for CLI config/cache
+RUN useradd -m -u 1001 -s /bin/sh codelayers
+ENV HOME=/home/codelayers
+
 WORKDIR /workspace
 
 USER 1001
