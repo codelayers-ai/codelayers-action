@@ -3,7 +3,7 @@ description: 'Generate a 3D code visualization for your PR and post a comment wi
 author: 'CodeLayers'
 
 branding:
-  icon: 'eye'
+  icon: 'layers'
   color: 'purple'
 
 inputs:
