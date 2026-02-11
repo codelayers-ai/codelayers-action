@@ -41,6 +41,9 @@ RUN set -eux; \
 RUN useradd -m -u 1001 -s /bin/sh codelayers
 ENV HOME=/home/codelayers
 
+# Trust /workspace for git (mounted volume has different owner)
+RUN git config --system --add safe.directory /workspace
+
 WORKDIR /workspace
 
 USER 1001
