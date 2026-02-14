@@ -14,13 +14,23 @@ else
   fi
 fi
 
-# --- Fetch base branch ---
+# --- Fetch base branch with enough history to find merge base ---
 FETCH_REF=$(jq -r '.pull_request.base.ref // "main"' "$GITHUB_EVENT_PATH" 2>/dev/null || echo "main")
-git fetch origin "$FETCH_REF" --depth=1
+git fetch origin "$FETCH_REF"
+
+# --- Find merge base (where the PR actually diverged from base) ---
+# Without this, we'd compare against the current tip of the base branch,
+# which includes commits merged after this PR was created.
+MERGE_BASE=$(git merge-base "$BASE_REF" HEAD 2>/dev/null || echo "")
+if [ -z "$MERGE_BASE" ]; then
+  echo "Warning: Could not find merge-base, falling back to $BASE_REF"
+  MERGE_BASE="$BASE_REF"
+fi
+echo "Merge base: $MERGE_BASE"
 
 # --- Build CLI args ---
 ARGS=(share "$GITHUB_WORKSPACE"
-  --base "$BASE_REF"
+  --base "$MERGE_BASE"
   --head HEAD
   --format json
   --expires "${INPUT_EXPIRES_DAYS:-7}"
