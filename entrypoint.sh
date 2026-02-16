@@ -14,19 +14,39 @@ else
   fi
 fi
 
-# --- Fetch base branch with enough history to find merge base ---
+# --- Fetch base branch ---
 FETCH_REF=$(jq -r '.pull_request.base.ref // "main"' "$GITHUB_EVENT_PATH" 2>/dev/null || echo "main")
 git fetch origin "$FETCH_REF"
 
-# --- Find merge base (where the PR actually diverged from base) ---
-# Without this, we'd compare against the current tip of the base branch,
-# which includes commits merged after this PR was created.
-MERGE_BASE=$(git merge-base "$BASE_REF" HEAD 2>/dev/null || echo "")
-if [ -z "$MERGE_BASE" ]; then
-  echo "Warning: Could not find merge-base, falling back to $BASE_REF"
-  MERGE_BASE="$BASE_REF"
+# --- Find merge base ---
+# Use GitHub Compare API for accurate merge base (matches "Files changed" tab).
+# This works regardless of fetch depth and always matches GitHub's PR view.
+PR_HEAD_SHA=$(jq -r '.pull_request.head.sha // empty' "$GITHUB_EVENT_PATH" 2>/dev/null || true)
+MERGE_BASE=""
+
+if [ -n "$PR_HEAD_SHA" ] && [ -n "${GITHUB_TOKEN:-}" ]; then
+  MERGE_BASE=$(curl -sf \
+    -H "Authorization: token $GITHUB_TOKEN" \
+    -H "Accept: application/vnd.github.v3+json" \
+    -H "User-Agent: codelayers-action" \
+    "https://api.github.com/repos/$GITHUB_REPOSITORY/compare/${FETCH_REF}...${PR_HEAD_SHA}" \
+    | jq -r '.merge_base_commit.sha // empty' || true)
+  if [ -n "$MERGE_BASE" ]; then
+    echo "Merge base (GitHub API): $MERGE_BASE"
+    git fetch --depth 1 origin "$MERGE_BASE" 2>/dev/null || true
+  fi
 fi
-echo "Merge base: $MERGE_BASE"
+
+# Fallback: local git merge-base (needs sufficient fetch depth)
+if [ -z "$MERGE_BASE" ]; then
+  MERGE_BASE=$(git merge-base "origin/$FETCH_REF" HEAD 2>/dev/null || echo "")
+  if [ -n "$MERGE_BASE" ]; then
+    echo "Merge base (local git): $MERGE_BASE"
+  else
+    MERGE_BASE="$BASE_REF"
+    echo "::warning::Could not compute merge base. Diff may include changes from the base branch. Set GITHUB_TOKEN or use fetch-depth: 0 for accurate results."
+  fi
+fi
 
 # --- Build CLI args ---
 ARGS=(share "$GITHUB_WORKSPACE"
