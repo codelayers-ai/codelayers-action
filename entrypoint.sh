@@ -48,30 +48,57 @@ if [ -z "$MERGE_BASE" ]; then
   fi
 fi
 
-# --- Build CLI args ---
-ARGS=(share "$GITHUB_WORKSPACE"
-  --base "$MERGE_BASE"
-  --head HEAD
-  --format json
-  --expires "${INPUT_EXPIRES_DAYS:-7}"
-)
+# --- Detect public/private and choose mode ---
+IS_PRIVATE=$(jq -r '.repository.private // "true"' "$GITHUB_EVENT_PATH")
+PR_NUMBER=$(jq -r '.pull_request.number // empty' "$GITHUB_EVENT_PATH" 2>/dev/null || true)
 
-if [ -n "${INPUT_MAX_VIEWS:-}" ]; then
-  ARGS+=(--max-views "$INPUT_MAX_VIEWS")
+if [ -n "${CODELAYERS_API_KEY:-}" ]; then
+  # Paid: encrypted share (existing behavior)
+  MODE="share"
+elif [ "$IS_PRIVATE" = "false" ] && [ -n "$PR_NUMBER" ]; then
+  # Free: public explore (no encryption, no auth)
+  MODE="explore"
+else
+  echo "::error::CODELAYERS_API_KEY is required for private repositories. Get one at https://codelayers.ai/docs/api-keys"
+  exit 1
 fi
 
-if [ "${INPUT_LINK_TO_PR:-true}" = "true" ]; then
-  ARGS+=(--github-repo "$GITHUB_REPOSITORY")
+echo "Mode: $MODE"
 
-  PR_NUMBER=$(jq -r '.pull_request.number // empty' "$GITHUB_EVENT_PATH" 2>/dev/null || true)
-  if [ -n "$PR_NUMBER" ]; then
-    ARGS+=(--github-pr "$PR_NUMBER")
+# --- Build CLI args ---
+if [ "$MODE" = "share" ]; then
+  ARGS=(share "$GITHUB_WORKSPACE"
+    --base "$MERGE_BASE"
+    --head HEAD
+    --format json
+    --expires "${INPUT_EXPIRES_DAYS:-7}"
+  )
+
+  if [ -n "${INPUT_MAX_VIEWS:-}" ]; then
+    ARGS+=(--max-views "$INPUT_MAX_VIEWS")
   fi
 
-  PR_TITLE=$(jq -r '.pull_request.title // empty' "$GITHUB_EVENT_PATH" 2>/dev/null || true)
-  if [ -n "$PR_TITLE" ]; then
-    ARGS+=(--github-pr-title "$PR_TITLE")
+  if [ "${INPUT_LINK_TO_PR:-true}" = "true" ]; then
+    ARGS+=(--github-repo "$GITHUB_REPOSITORY")
+
+    if [ -n "$PR_NUMBER" ]; then
+      ARGS+=(--github-pr "$PR_NUMBER")
+    fi
+
+    PR_TITLE=$(jq -r '.pull_request.title // empty' "$GITHUB_EVENT_PATH" 2>/dev/null || true)
+    if [ -n "$PR_TITLE" ]; then
+      ARGS+=(--github-pr-title "$PR_TITLE")
+    fi
   fi
+else
+  # Explore mode: use the GitHub PR URL
+  PR_URL="https://github.com/$GITHUB_REPOSITORY/pull/$PR_NUMBER"
+  ARGS=(explore "$PR_URL"
+    --path "$GITHUB_WORKSPACE"
+    --format json
+    --expires "${INPUT_EXPIRES_DAYS:-7}"
+    --force
+  )
 fi
 
 echo "Running: codelayers ${ARGS[*]}"
@@ -81,9 +108,10 @@ RESULT=$(codelayers "${ARGS[@]}")
 echo "CLI output: $RESULT"
 
 # --- Parse JSON output ---
+# Normalize: share uses share_url/share_id, explore uses explore_url/explore_id
 JSON_LINE=$(echo "$RESULT" | grep -E '^\{' | tail -1)
-SHARE_URL=$(echo "$JSON_LINE" | jq -r '.share_url')
-SHARE_ID=$(echo "$JSON_LINE" | jq -r '.share_id')
+SHARE_URL=$(echo "$JSON_LINE" | jq -r '.share_url // .explore_url')
+SHARE_ID=$(echo "$JSON_LINE" | jq -r '.share_id // .explore_id')
 NODE_COUNT=$(echo "$JSON_LINE" | jq -r '.node_count')
 CHANGED_FILE_COUNT=$(echo "$JSON_LINE" | jq -r '.changed_file_count')
 FILE_COUNT=$(echo "$JSON_LINE" | jq -r '.file_count // empty')
@@ -131,6 +159,13 @@ else
   BLAST_LINE="> **${CHANGED_FILE_COUNT} files changed**"
 fi
 
+# Build privacy/mode detail line
+if [ "$MODE" = "share" ]; then
+  PRIVACY_LINE="- **Zero-knowledge** — your code is encrypted client-side and never leaves your browser"
+else
+  PRIVACY_LINE="- **Open source** — public visualization of your open-source codebase"
+fi
+
 COMMENT_BODY=$(cat <<EOF
 ## CodeLayers — PR Visualization
 
@@ -145,7 +180,7 @@ ${BLAST_LINE}
 - **Blast radius** — changed files in red, affected dependencies in orange/yellow gradient
 - **Dependency graph** — click any file to see its imports and dependents
 - **Code metrics** — LOC, complexity, and entry points per file
-- **Zero-knowledge** — your code is encrypted client-side and never leaves your browser
+${PRIVACY_LINE}
 
 </details>
 
