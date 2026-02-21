@@ -1,5 +1,5 @@
 name: 'CodeLayers PR Visualization'
-description: 'Generate a 3D code visualization for your PR and post a comment with the share link'
+description: 'Generate a 3D code visualization for your PR. Free for public repos, API key required for private repos.'
 author: 'CodeLayers'
 
 branding:
@@ -8,22 +8,23 @@ branding:
 
 inputs:
   api_key:
-    description: 'CodeLayers API key (from `codelayers api-keys create`)'
-    required: true
+    description: 'CodeLayers API key. Optional for public repos (uses free explore). Required for private repos.'
+    required: false
+    default: ''
   base_branch:
     description: 'Base branch to compare against (default: auto-detect from PR)'
     required: false
     default: ''
   expires_days:
-    description: 'Days until the share link expires'
+    description: 'Days until the visualization link expires'
     required: false
     default: '7'
   max_views:
-    description: 'Maximum number of views (empty = unlimited)'
+    description: 'Maximum number of views (empty = unlimited, share mode only)'
     required: false
     default: ''
   comment:
-    description: 'Post/update a PR comment with the share link'
+    description: 'Post/update a PR comment with the visualization link'
     required: false
     default: 'true'
   link_to_pr:
@@ -33,9 +34,9 @@ inputs:
 
 outputs:
   share_url:
-    description: 'Full share URL with encryption key'
+    description: 'Full visualization URL (share URL with encryption key, or explore URL)'
   share_id:
-    description: 'Share ID (UUID)'
+    description: 'Share or explore ID (UUID)'
   node_count:
     description: 'Number of nodes in the graph'
   changed_file_count:
