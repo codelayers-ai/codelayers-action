@@ -1,8 +1,12 @@
 # CodeLayers Action
 
-Generate a 3D code visualization for every PR automatically. Posts a comment with an interactive share link showing your codebase as a spatial graph with blast radius highlighting.
+Visualize every PR as a 3D dependency graph. See blast radius, trace imports, and understand the impact of changes — automatically.
 
-## Quick Start
+**Free for open source. No account required.**
+
+## Quick Start (Open Source)
+
+Add this to `.github/workflows/codelayers.yml` — that's it:
 
 ```yaml
 name: CodeLayers
@@ -20,47 +24,61 @@ jobs:
           fetch-depth: 0
 
       - uses: codelayers-ai/codelayers-action@v1
+```
+
+No API key. No sign-up. Every PR gets a comment with an interactive 3D visualization link.
+
+### Private Repos
+
+For private repositories, add an API key:
+
+```yaml
+      - uses: codelayers-ai/codelayers-action@v1
         with:
           api_key: ${{ secrets.CODELAYERS_API_KEY }}
 ```
 
-## Pricing
+<details>
+<summary>How to get an API key</summary>
 
-Shared visualization links are **free** — anyone with the link can view the 3D graph in their browser.
+```bash
+brew install codelayers-ai/tap/codelayers
+codelayers login
+codelayers api-keys create "GitHub CI"
+```
 
-To generate an API key, you need the [CodeLayers app](https://apps.apple.com/app/codelayers/id6756067177) (subscription required).
+Add the key as a repository secret named `CODELAYERS_API_KEY`. Requires a [CodeLayers Pro](https://codelayers.ai) subscription.
 
-## Setup
+</details>
 
-1. Install the CLI and create an API key:
-   ```bash
-   brew install codelayers-ai/tap/codelayers
-   codelayers login
-   codelayers api-keys create "GitHub CI"
-   ```
+## What Reviewers See
 
-2. Add the key as a repository secret named `CODELAYERS_API_KEY`
+Every PR comment includes a link to an interactive 3D visualization:
 
-3. Add the workflow above to `.github/workflows/codelayers.yml`
+- **Blast radius** — changed files in red, affected dependencies in orange/yellow gradient by distance
+- **Dependency graph** — click any file to see its imports and dependents
+- **Code metrics** — LOC, complexity, and entry points per file
+- **Language breakdown** — top languages in the codebase at a glance
+
+Open source repos get a public explore link. Private repos get a zero-knowledge encrypted link (code is encrypted client-side, the server never sees it).
 
 ## Inputs
 
 | Input | Required | Default | Description |
 |-------|----------|---------|-------------|
-| `api_key` | Yes | | CodeLayers API key |
+| `api_key` | No | | API key for private repos. Not needed for public repos. |
 | `base_branch` | No | auto-detect | Base branch to compare against |
-| `expires_days` | No | `7` | Days until share link expires |
-| `max_views` | No | unlimited | Maximum number of views |
+| `expires_days` | No | `7` | Days until visualization link expires |
+| `max_views` | No | unlimited | Maximum number of views (private repos only) |
 | `comment` | No | `true` | Post/update PR comment |
-| `link_to_pr` | No | `true` | Link share to GitHub repo/PR metadata |
-| `cli_image` | No | `ghcr.io/codelayers-ai/codelayers-cli:latest` | CLI Docker image |
+| `link_to_pr` | No | `true` | Link visualization to GitHub repo/PR metadata |
 
 ## Outputs
 
 | Output | Description |
 |--------|-------------|
-| `share_url` | Full share URL with encryption key |
-| `share_id` | Share ID (UUID) |
+| `share_url` | Visualization URL |
+| `share_id` | Share/explore ID (UUID) |
 | `node_count` | Number of nodes in the graph |
 | `file_count` | Number of files in the graph |
 | `changed_file_count` | Number of files changed in the PR |
@@ -68,28 +86,18 @@ To generate an API key, you need the [CodeLayers app](https://apps.apple.com/app
 
 ## How It Works
 
-1. Parses your codebase with tree-sitter (10 languages supported)
+1. Parses your codebase with tree-sitter (10 languages)
 2. Builds a dependency graph (functions, classes, imports, calls)
 3. Computes blast radius from PR changes
-4. Encrypts with a random key (zero-knowledge — server never sees your code)
-5. Uploads encrypted blob and posts a comment with the share link
-6. The encryption key is in the URL fragment (never sent to the server)
+4. Posts a comment with the visualization link
 
-### What reviewers see
-
-- **Blast radius** — changed files highlighted in red, with affected dependencies shown in an orange/yellow gradient by distance
-- **Dependency graph** — click any file to see its imports and dependents
-- **Code metrics** — LOC, complexity, and entry points per file
-- **Language breakdown** — top languages in the codebase at a glance
+For private repos, code is encrypted client-side with a random key. The key lives in the URL fragment and is never sent to the server.
 
 ## Using Outputs
 
 ```yaml
 - uses: codelayers-ai/codelayers-action@v1
   id: codelayers
-  with:
-    api_key: ${{ secrets.CODELAYERS_API_KEY }}
-    comment: false  # we'll post our own comment
 
 - name: Custom comment
   run: |
