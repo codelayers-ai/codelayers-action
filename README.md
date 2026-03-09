@@ -106,6 +106,10 @@ For private repos, code is encrypted client-side with a random key. The key live
     echo "Blast radius: ${{ steps.codelayers.outputs.blast_radius_count }}"
 ```
 
+## Entire.io Support
+
+If your repo uses [Entire.io](https://entire.io), CodeLayers automatically detects the `entire/checkpoints/v1` branch and shows AI agent attribution in the visualization. Which files were written by Claude Code, Copilot, Gemini CLI, and which were human-authored. No extra configuration needed.
+
 ## Supported Languages
 
 Rust, TypeScript/JavaScript, Python, Java, Go, C++, C#, Ruby, PHP, Swift
