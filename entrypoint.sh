@@ -167,19 +167,19 @@ else
 fi
 
 COMMENT_BODY=$(cat <<EOF
-## CodeLayers — PR Visualization
+## CodeLayers — Impact Analysis
 
 ${BLAST_LINE}
 > ${CONTEXT_LINE}
 
-### [Open 3D Visualization →](${SHARE_URL})
+### [See what this PR touches →](${SHARE_URL})
 
 <details>
-<summary>What will I see?</summary>
+<summary>What's in this analysis?</summary>
 
-- **Blast radius** — changed files in red, affected dependencies in orange/yellow gradient
-- **Dependency graph** — click any file to see its imports and dependents
-- **Code metrics** — LOC, complexity, and entry points per file
+- **Blast radius** — changed files in red, every affected downstream file color-coded by distance
+- **Dependency map** — click any file to see what imports it and what it depends on
+- **Risk signals** — LOC, centrality, and entry point status per file
 ${PRIVACY_LINE}
 
 </details>
@@ -193,7 +193,7 @@ EXISTING_ID=$(curl -sf \
   -H "Authorization: token $GITHUB_TOKEN" \
   -H "Accept: application/vnd.github.v3+json" \
   "https://api.github.com/repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" \
-  | jq -r '.[] | select(.body | (contains("CodeLayers 3D Visualization") or contains("CodeLayers — PR Visualization"))) | .id' \
+  | jq -r '.[] | select(.body | (contains("CodeLayers 3D Visualization") or contains("CodeLayers — PR Visualization") or contains("CodeLayers — Impact Analysis"))) | .id' \
   | head -1 || true)
 
 PAYLOAD=$(jq -n --arg body "$COMMENT_BODY" '{body: $body}')
