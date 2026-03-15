@@ -4,7 +4,7 @@ Visualize every PR as a 3D dependency graph. See blast radius, trace imports, an
 
 **Free for open source. No account required.**
 
-## Quick Start (Open Source)
+## Quick Start
 
 Add this to `.github/workflows/codelayers.yml`:
 
