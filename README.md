@@ -1,12 +1,12 @@
 # CodeLayers Action
 
-Visualize every PR as a 3D dependency graph. See blast radius, trace imports, and understand the impact of changes — automatically.
+Visualize every PR as a 3D dependency graph. See blast radius, trace imports, and understand the impact of changes automatically.
 
 **Free for open source. No account required.**
 
 ## Quick Start (Open Source)
 
-Add this to `.github/workflows/codelayers.yml` — that's it:
+Add this to `.github/workflows/codelayers.yml`:
 
 ```yaml
 name: CodeLayers
@@ -55,10 +55,10 @@ Add the key as a repository secret named `CODELAYERS_API_KEY`. Requires a [CodeL
 
 Every PR comment includes a link to an interactive 3D visualization:
 
-- **Blast radius** — changed files in red, affected dependencies in orange/yellow gradient by distance
-- **Dependency graph** — click any file to see its imports and dependents
-- **Code metrics** — LOC, complexity, and entry points per file
-- **Language breakdown** — top languages in the codebase at a glance
+- **Blast radius**: changed files in red, affected dependencies in orange/yellow gradient by distance
+- **Dependency graph**: click any file to see its imports and dependents
+- **Code metrics**: LOC, complexity, and entry points per file
+- **Language breakdown**: top languages in the codebase at a glance
 
 Open source repos get a public explore link. Private repos get a zero-knowledge encrypted link (code is encrypted client-side, the server never sees it).
 
@@ -108,7 +108,7 @@ For private repos, code is encrypted client-side with a random key. The key live
 
 ## Entire.io Support
 
-If your repo uses [Entire.io](https://entire.io), CodeLayers automatically detects the `entire/checkpoints/v1` branch and shows AI agent attribution in the visualization. Which files were written by Claude Code, Copilot, Gemini CLI, and which were human-authored. No extra configuration needed.
+If your repo uses [Entire.io](https://entire.io), CodeLayers automatically detects the `entire/checkpoints/v1` branch and shows AI agent attribution in the visualization, showing which files were written by Claude Code, Copilot, or Gemini CLI and which were human-authored. No extra configuration needed.
 
 ## Supported Languages
 
